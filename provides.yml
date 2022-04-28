@@ -1,0 +1,8 @@
+client_tabs:
+    nudge-tab:
+        view: nudge_tab
+        i18n: nudge.nudge
+listings:
+    nudge:
+        view: nudge_listing
+        i18n: nudge.nudge

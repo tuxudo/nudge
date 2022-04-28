@@ -1,0 +1,126 @@
+#!/usr/local/munkireport/munkireport-python2
+# Python 3 compatible
+
+import os
+import re
+import sys
+from datetime import datetime, timedelta, tzinfo
+
+sys.path.insert(0, '/usr/local/munki')
+sys.path.insert(0, '/usr/local/munkireport')
+
+from munkilib import FoundationPlist
+
+def get_log():
+
+    # Check if the log exists
+    if os.path.isfile('/var/log/Nudge.log'):
+
+        nudge_log = {}
+        line_number = 0
+        nudge_log_text = []
+
+        # Process log from bottom up to get last full run
+        for line in reversed(open("/var/log/Nudge.log").readlines()):
+            # Increment line number
+            line_number += 1
+
+            # Add the line to the nudge text
+            nudge_log_text.append(line)
+
+            if line_number > 500:
+                # Exit if we've processed 500 lines
+                break
+            elif "past_required_install_date" not in nudge_log and "Device pastRequiredInstallationDate: false" in line:
+                nudge_log['past_required_install_date'] = False
+            elif "past_required_install_date" not in nudge_log and "Device pastRequiredInstallationDate: true" in line:
+                nudge_log['past_required_install_date'] = True
+
+            elif "current_os" not in nudge_log and "Current operating system " in line  and "required_os" not in nudge_log and "is greater than or equal to required operating system" in line:
+
+                extract_result = re.findall(r'\(.*?\)', line)
+
+                nudge_log['current_os'] = extract_result[0].replace("(", "").replace(")", "").strip()
+                nudge_log['required_os'] = extract_result[1].replace("(", "").replace(")", "").strip()
+
+            elif "more_info_event" not in nudge_log and "User clicked moreInfo button" in line:
+                nudge_log['more_info_event'] = nudge_log_to_timestamp(line.split("  localhost ")[0])
+            elif "device_info_event" not in nudge_log and "User clicked deviceInfo" in line:
+                nudge_log['device_info_event'] = nudge_log_to_timestamp(line.split("  localhost ")[0])
+            elif "primary_quit_event" not in nudge_log and "User clicked primaryQuitButton" in line:
+                nudge_log['primary_quit_event'] = nudge_log_to_timestamp(line.split("  localhost ")[0])
+            elif "secondary_quit_event" not in nudge_log and "User clicked secondaryQuitButton" in line:
+                nudge_log['secondary_quit_event'] = nudge_log_to_timestamp(line.split("  localhost ")[0])
+            elif "update_device_event" not in nudge_log and "User clicked updateDevice" in line:
+                nudge_log['update_device_event'] = nudge_log_to_timestamp(line.split("  localhost ")[0])
+            elif "synthetic_click_event" not in nudge_log and "Synthetically clicked updateDevice due to allowedDeferral count" in line:
+                nudge_log['synthetic_click_event'] = nudge_log_to_timestamp(line.split("  localhost ")[0])
+            elif "command_quit_event" not in nudge_log and "Nudge detected an attempt to close the application" in line:
+                nudge_log['command_quit_event'] = nudge_log_to_timestamp(line.split("  localhost ")[0])
+            elif "termination_event" not in nudge_log and "Nudge is terminating due to condition met" in line:
+                nudge_log['termination_event'] = nudge_log_to_timestamp(line.split("  localhost ")[0])
+            elif "activation_event" not in nudge_log and "ctivating Nudge" in line:
+                nudge_log['activation_event'] = nudge_log_to_timestamp(line.split("  localhost ")[0])
+            elif "new_nudge_event" not in nudge_log and "New Nudge event detected - resetting all deferral values" in line:
+                nudge_log['new_nudge_event'] = nudge_log_to_timestamp(line.split("  localhost ")[0])
+            elif "deferral_initiated_event" not in nudge_log and "User initiated a deferral: " in line:
+                nudge_log['deferral_initiated_event'] = nudge_log_to_timestamp(line.split("  localhost ")[0])
+                nudge_log['deferral_date'] = nudge_log_to_timestamp(line.split("User initiated a deferral: ")[1].replace(" +0000", ".000000+0000"))
+
+        # Add the nudge text to the dict for saving
+        nudge_log_text.reverse()
+        nudge_log['nudge_log'] = str.join('', (nudge_log_text))
+
+        return nudge_log
+
+    else:
+        print("Error: No nudge log found!")   
+        return {}
+
+def to_bool(s):
+    if s == True or s == 1 or s == "TRUE" or s == "true" or s == "Yes":
+        return "1"
+    else:
+        return "0"
+
+def nudge_log_to_timestamp(time_string):
+    time_string = time_string.strip()
+    date_str, tz = time_string[:-5], time_string[-5:]
+    dt_utc = datetime.strptime(date_str.strip(), "%Y-%m-%d %H:%M:%S.%f")
+    dt = dt_utc.replace(tzinfo=FixedOffset(tz))
+    utc_naive = dt.replace(tzinfo=None) - dt.utcoffset()
+    return int((utc_naive - datetime(1970, 1, 1)).total_seconds())
+
+class FixedOffset(tzinfo):
+    """offset_str: Fixed offset in str: e.g. '-0400'"""
+    def __init__(self, offset_str):
+        sign, hours, minutes = offset_str[0], offset_str[1:3], offset_str[3:]
+        offset = (int(hours) * 60 + int(minutes)) * (-1 if sign == "-" else 1)
+        self.__offset = timedelta(minutes=offset)
+        # NOTE: the last part is to remind about deprecated POSIX GMT+h timezones
+        # that have the opposite sign in the name;
+        # the corresponding numeric value is not used e.g., no minutes
+        '<%+03d%02d>%+d' % (int(hours), int(minutes), int(hours)*-1)
+    def utcoffset(self, dt=None):
+        return self.__offset
+    def tzname(self, dt=None):
+        return self.__name
+    def dst(self, dt=None):
+        return timedelta(0)
+    def __repr__(self):
+        return 'FixedOffset(%d)' % (self.utcoffset().total_seconds() / 60)
+
+def main():
+    """Main"""
+    
+    # Get information about Nudge
+    result = get_log()
+    
+    # Write Nudge results to cache
+    cachedir = '%s/cache' % os.path.dirname(os.path.realpath(__file__))
+    output_plist = os.path.join(cachedir, 'nudge.plist')
+    FoundationPlist.writePlist(result, output_plist)
+#    print FoundationPlist.writePlistToString(result)
+
+if __name__ == "__main__":
+    main()

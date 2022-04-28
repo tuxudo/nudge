@@ -1,0 +1,20 @@
+{
+    "nudge": "Nudge",
+    "report": "Nudge Report",
+    "past_required_install_date": "Past Required Install Date",
+    "current_os": "Current OS",
+    "required_os": "Required OS",
+    "more_info_event": "More Info Button Clicked",
+    "device_info_event": "Device Info Button Clicked",
+    "primary_quit_event": "Primary Quit Button Clicked",
+    "secondary_quit_event": "Secondary Quit Button Clicked",
+    "update_device_event": "Update Device Button Clicked",
+    "deferral_initiated_event": "Deferral Button Clicked",
+    "deferral_date": "Deferral Date",
+    "synthetic_click_event": "Synthetic Button Click",
+    "command_quit_event": "Close Attempt",
+    "termination_event": "Nudge Termination",
+    "activation_event": "Nudge Activation",
+    "new_nudge_event": "New Nudge Event",
+    "nudge_log": "Nudge Log"
+}

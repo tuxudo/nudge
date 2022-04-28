@@ -1,0 +1,24 @@
+i18n_title: nudge.report
+not_null_column: new_nudge_event
+table:
+  - column: machine.computer_name
+    i18n_header: listing.computername
+    formatter: clientDetail
+    tab_link: nudge-tab
+  - column: reportdata.serial_number
+    i18n_header: serial
+  - {i18n_header: nudge.past_required_install_date, column: nudge.past_required_install_date, formatter: binaryYesNo}
+  - {i18n_header: nudge.current_os, column: nudge.current_os}
+  - {i18n_header: nudge.required_os, column: nudge.required_os}
+  - {i18n_header: nudge.deferral_date, column: nudge.deferral_date, formatter: timestampToMoment}
+  - {i18n_header: nudge.new_nudge_event, column: nudge.new_nudge_event, formatter: timestampToMoment}
+  - {i18n_header: nudge.activation_event, column: nudge.activation_event, formatter: timestampToMoment}
+  - {i18n_header: nudge.update_device_event, column: nudge.update_device_event, formatter: timestampToMoment}
+  - {i18n_header: nudge.primary_quit_event, column: nudge.primary_quit_event, formatter: timestampToMoment}
+  - {i18n_header: nudge.secondary_quit_event, column: nudge.secondary_quit_event, formatter: timestampToMoment}
+  - {i18n_header: nudge.deferral_initiated_event, column: nudge.deferral_initiated_event, formatter: timestampToMoment}
+  - {i18n_header: nudge.more_info_event, column: nudge.more_info_event, formatter: timestampToMoment}
+  - {i18n_header: nudge.device_info_event, column: nudge.device_info_event, formatter: timestampToMoment}
+  - {i18n_header: nudge.command_quit_event, column: nudge.command_quit_event, formatter: timestampToMoment}
+  - {i18n_header: nudge.termination_event, column: nudge.termination_event, formatter: timestampToMoment}
+  - {i18n_header: nudge.synthetic_click_event, column: nudge.synthetic_click_event, formatter: timestampToMoment}
