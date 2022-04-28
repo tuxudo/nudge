@@ -32,9 +32,9 @@ def get_log():
                 # Exit if we've processed 500 lines
                 break
             elif "past_required_install_date" not in nudge_log and "Device pastRequiredInstallationDate: false" in line:
-                nudge_log['past_required_install_date'] = False
+                nudge_log['past_required_install_date'] = 0
             elif "past_required_install_date" not in nudge_log and "Device pastRequiredInstallationDate: true" in line:
-                nudge_log['past_required_install_date'] = True
+                nudge_log['past_required_install_date'] = 1
 
             elif "current_os" not in nudge_log and "Current operating system " in line  and "required_os" not in nudge_log and "is greater than or equal to required operating system" in line:
 
@@ -76,12 +76,6 @@ def get_log():
     else:
         print("Error: No nudge log found!")   
         return {}
-
-def to_bool(s):
-    if s == True or s == 1 or s == "TRUE" or s == "true" or s == "Yes":
-        return "1"
-    else:
-        return "0"
 
 def nudge_log_to_timestamp(time_string):
     time_string = time_string.strip()
