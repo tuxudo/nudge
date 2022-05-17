@@ -28,8 +28,8 @@ def get_log():
             # Add the line to the nudge text
             nudge_log_text.append(line)
 
-            if line_number > 500:
-                # Exit if we've processed 500 lines
+            if line_number > 400:
+                # Exit if we've processed 400 lines
                 break
             elif "past_required_install_date" not in nudge_log and "Device pastRequiredInstallationDate: false" in line:
                 nudge_log['past_required_install_date'] = 0
