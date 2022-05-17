@@ -1,5 +1,4 @@
 i18n_title: nudge.report
-not_null_column: new_nudge_event
 table:
   - column: machine.computer_name
     i18n_header: listing.computername
