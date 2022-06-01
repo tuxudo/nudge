@@ -22,6 +22,9 @@ $(document).on('appReady', function(){
                         var date = new Date(d[prop] * 1000);
                         rows = rows + '<tr><th>'+i18n.t('nudge.'+prop)+'</th><td>'+moment(date).fromNow()+' - '+moment(date).format('llll')+'</td></tr>';
 
+                    // Format newlines
+                    } else if(prop == "json_config" || prop == "profile_config"){
+                        rows = rows + '<tr><th>'+i18n.t('nudge.'+prop)+'</th><td>'+d[prop].replace(/\n/g, "<br>").replace(/\\n/g, "<br>").replace(/ /g, "&nbsp;")+'</td></tr>';
                     } else if(prop == "nudge_log"){
                         rows = rows + '<tr><th>'+i18n.t('nudge.'+prop)+'</th><td>'+d[prop].replace(/\n/g, "<br>").replace(/\\/g, "")+'</td></tr>';
 

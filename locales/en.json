@@ -16,5 +16,9 @@
     "termination_event": "Nudge Termination",
     "activation_event": "Nudge Activation",
     "new_nudge_event": "New Nudge Event",
-    "nudge_log": "Nudge Log"
+    "nudge_log": "Nudge Log",
+    "deferral_count": "Deferral Count",
+    "deferral_user": "Deferral User",
+    "json_config": "Nudge Local JSON Config",
+    "profile_config": "Nudge Mobile Config Profile"
 }

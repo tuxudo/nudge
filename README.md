@@ -21,5 +21,9 @@ Table Schema
 * termination_event - BIGINT - Timestamp of when Nudge terminated last
 * activation_event - BIGINT - Timestamp of when Nudge activated last
 * new_nudge_event - BIGINT - Timestamp of when Nudge parsed its config last
-* nudge_log - TEXT - Last 500 lines of Nudge.log
+* nudge_log - TEXT - Last 400 lines of Nudge.log
+* deferral_count - INT - Count of deferrals left
+* deferral_user - VARCHAR(255) - Username of deferral count
+* json_config - TEXT - JSON dump of Nudge config (requires Nudge 1.1.7+)
+* profile_config - TEXT - PLIST dump of Nudge config (requires Nudge 1.1.7+)
 

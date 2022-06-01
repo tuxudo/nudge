@@ -25,6 +25,10 @@ class Nudge_model extends \Model
         $this->rs['activation_event'] = null;
         $this->rs['new_nudge_event'] = null;
         $this->rs['nudge_log'] = null;
+        $this->rs['deferral_count'] = null;
+        $this->rs['deferral_user'] = null;
+        $this->rs['json_config'] = null;
+        $this->rs['profile_config'] = null;
 
         if ($serial) {
             $this->retrieve_record($serial);

@@ -4,6 +4,9 @@
 import os
 import re
 import sys
+import subprocess
+import json
+import plistlib
 from datetime import datetime, timedelta, tzinfo
 
 sys.path.insert(0, '/usr/local/munki')
@@ -11,12 +14,106 @@ sys.path.insert(0, '/usr/local/munkireport')
 
 from munkilib import FoundationPlist
 
+from SystemConfiguration import SCDynamicStoreCopyConsoleUser
+from ctypes import (CDLL,
+                    Structure,
+                    POINTER,
+                    c_int64,
+                    c_int32,
+                    c_int16,
+                    c_char,
+                    c_uint32)
+from ctypes.util import find_library
+
+def get_last_user():
+
+    # local constants
+    setutxent_wtmp = c.setutxent_wtmp
+    setutxent_wtmp.restype = None
+    getutxent_wtmp = c.getutxent_wtmp
+    getutxent_wtmp.restype = POINTER(utmpx)
+    endutxent_wtmp = c.setutxent_wtmp
+    endutxent_wtmp.restype = None
+    # initialize
+    setutxent_wtmp(0)
+    entry = getutxent_wtmp()
+    while entry:
+        e = entry.contents
+        entry = getutxent_wtmp()
+        if (e.ut_type == 7 and e.ut_line == "console" and e.ut_user != "root" and e.ut_user != ""):
+            endutxent_wtmp()
+            return e.ut_user
+    
+def get_user_deferral():
+    
+    # Attempt to get currently logged in person
+    username = (SCDynamicStoreCopyConsoleUser(None, None, None) or [None])[0]
+    username = [username,""][username in [u"loginwindow", None, u""]]
+    
+    # If we can't get the current user, get last console login
+    if username == "":
+        username = get_last_user()
+                    
+    # Get the user's home folder
+    cmd = ['dscl', '.', '-read', '/Users/'+username, 'NFSHomeDirectory']
+    proc = subprocess.Popen(cmd, shell=False, bufsize=-1,
+                            stdin=subprocess.PIPE,
+                            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    (output, unused_error) = proc.communicate()
+
+    userpath = output.split(" ")[1].strip()
+
+    nudge_user_config = FoundationPlist.readPlist(userpath+"/Library/Preferences/com.github.macadmins.Nudge.plist")
+
+    if "userDeferrals" in nudge_user_config:
+        return {"deferral_count":nudge_user_config["userDeferrals"], "deferral_user":username}
+    else:
+        return ""
+
+def get_nudge_config(argument):
+
+    # Check if Nudge exists where it's expected to exist
+    if os.path.isfile('/Applications/Utilities/Nudge.app/Contents/MacOS/Nudge'):
+        # Get the Nudge config
+        cmd = ['/Applications/Utilities/Nudge.app/Contents/MacOS/Nudge', argument]
+        proc = subprocess.Popen(cmd, shell=False, bufsize=-1,
+                                stdin=subprocess.PIPE,
+                                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        (output, unused_error) = proc.communicate()
+
+        return output
+    else:
+        return ""
+
 def get_log():
+
+    nudge_log = {}
+
+    # Set user deferral count
+    try:
+        user_deferrals = get_user_deferral()
+        nudge_log['deferral_count'] = user_deferrals["deferral_count"]
+        nudge_log['deferral_user'] = user_deferrals["deferral_user"]
+    except Exception:
+        pass
+
+    # Get Nudge config
+    try:
+        nudge_log['json_config'] = get_nudge_config("-print-json-config")
+
+        plist_config = get_nudge_config("-print-profile-config")
+        try:
+            plist_config = plistlib.readPlistFromString(plist_config)
+        except AttributeError as e:
+            plist_config = plistlib.loads(plist_config)
+
+        nudge_log['profile_config'] = json.dumps(plist_config,indent=2,default=str)
+    except Exception:
+        pass
 
     # Check if the log exists
     if os.path.isfile('/var/log/Nudge.log'):
 
-        nudge_log = {}
         line_number = 0
         nudge_log_text = []
 
@@ -28,8 +125,8 @@ def get_log():
             # Add the line to the nudge text
             nudge_log_text.append(line)
 
-            if line_number > 500:
-                # Exit if we've processed 500 lines
+            if line_number > 400:
+                # Exit if we've processed 400 lines
                 break
             elif "past_required_install_date" not in nudge_log and "Device pastRequiredInstallationDate: false" in line:
                 nudge_log['past_required_install_date'] = 0
@@ -75,7 +172,7 @@ def get_log():
 
     else:
         print("Error: No nudge log found!")   
-        return {}
+        return nudge_log
 
 def nudge_log_to_timestamp(time_string):
     time_string = time_string.strip()
