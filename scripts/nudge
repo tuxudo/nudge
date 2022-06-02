@@ -7,6 +7,7 @@ import sys
 import subprocess
 import json
 import plistlib
+import time
 from datetime import datetime, timedelta, tzinfo
 
 sys.path.insert(0, '/usr/local/munki')
@@ -55,7 +56,7 @@ def get_user_deferral():
         username = get_last_user()
                     
     # Get the user's home folder
-    cmd = ['dscl', '.', '-read', '/Users/'+username, 'NFSHomeDirectory']
+    cmd = ['/usr/bin/dscl', '.', '-read', '/Users/'+username, 'NFSHomeDirectory']
     proc = subprocess.Popen(cmd, shell=False, bufsize=-1,
                             stdin=subprocess.PIPE,
                             stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -72,24 +73,39 @@ def get_user_deferral():
 
 def get_nudge_config(argument):
 
-    # Check if Nudge exists where it's expected to exist
-    if os.path.isfile('/Applications/Utilities/Nudge.app/Contents/MacOS/Nudge'):
-        # Get the Nudge config
-        cmd = ['/Applications/Utilities/Nudge.app/Contents/MacOS/Nudge', argument]
-        proc = subprocess.Popen(cmd, shell=False, bufsize=-1,
-                                stdin=subprocess.PIPE,
-                                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        (output, unused_error) = proc.communicate()
+    # Get the Nudge config
+    cmd = ['/Applications/Utilities/Nudge.app/Contents/MacOS/Nudge', argument]
 
-        return output
+    proc = subprocess.Popen(cmd, shell=False, bufsize=-1,
+                            stdin=subprocess.PIPE,
+                            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+    # Attempt to get Nudge's config for up to 7 seconds
+    timeout = 7
+
+    while timeout > 0:
+        if proc.poll() is not None:
+
+            (output, unused_error) = proc.communicate()
+            return output
+
+        time.sleep(0.1)
+        timeout -= 0.1
     else:
-        return ""
+        print("Warning: Timed out getting Nudge config!")
+
+        try:
+            proc.kill()
+        except OSError, e:
+            pass
+
+    return ""
 
 def get_log():
 
     nudge_log = {}
 
-    # Set user deferral count
+    # Get user deferral count
     try:
         user_deferrals = get_user_deferral()
         nudge_log['deferral_count'] = user_deferrals["deferral_count"]
@@ -97,19 +113,21 @@ def get_log():
     except Exception:
         pass
 
-    # Get Nudge config
-    try:
-        nudge_log['json_config'] = get_nudge_config("-print-json-config")
-
-        plist_config = get_nudge_config("-print-profile-config")
+    # Check if Nudge exists where it's expected to exist
+    if os.path.isfile('/Applications/Utilities/Nudge.app/Contents/MacOS/Nudge'):
+        # Get Nudge config
         try:
-            plist_config = plistlib.readPlistFromString(plist_config)
-        except AttributeError as e:
-            plist_config = plistlib.loads(plist_config)
+            nudge_log['json_config'] = get_nudge_config("-print-json-config")
 
-        nudge_log['profile_config'] = json.dumps(plist_config,indent=2,default=str)
-    except Exception:
-        pass
+            plist_config = get_nudge_config("-print-profile-config")
+            try:
+                plist_config = plistlib.readPlistFromString(plist_config)
+            except AttributeError as e:
+                plist_config = plistlib.loads(plist_config)
+
+            nudge_log['profile_config'] = json.dumps(plist_config,indent=3,default=str)
+        except Exception:
+            pass
 
     # Check if the log exists
     if os.path.isfile('/var/log/Nudge.log'):
@@ -168,11 +186,10 @@ def get_log():
         nudge_log_text.reverse()
         nudge_log['nudge_log'] = str.join('', (nudge_log_text))
 
-        return nudge_log
-
     else:
-        print("Error: No nudge log found!")   
-        return nudge_log
+        print("Error: No nudge log found!")
+
+    return nudge_log
 
 def nudge_log_to_timestamp(time_string):
     time_string = time_string.strip()
