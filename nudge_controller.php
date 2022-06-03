@@ -62,7 +62,7 @@ class Nudge_controller extends Module_controller
     
         $sql = "SELECT past_required_install_date, current_os, required_os, deferral_count, deferral_user, more_info_event, device_info_event, primary_quit_event, 
                         secondary_quit_event, update_device_event, deferral_initiated_event, deferral_date, synthetic_click_event,
-                        command_quit_event, termination_event, activation_event, new_nudge_event, profile_config, json_config, nudge_log
+                        command_quit_event, termination_event, activation_event, new_nudge_event, nudge_log
                         FROM nudge 
                         WHERE serial_number = '$serial_number'";
 

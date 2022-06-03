@@ -113,21 +113,22 @@ def get_log():
     except Exception:
         pass
 
-    # Check if Nudge exists where it's expected to exist
-    if os.path.isfile('/Applications/Utilities/Nudge.app/Contents/MacOS/Nudge'):
-        # Get Nudge config
-        try:
-            nudge_log['json_config'] = get_nudge_config("-print-json-config")
+    # Disabled because this causes problems
+    # # Check if Nudge exists where it's expected to exist
+    # if os.path.isfile('/Applications/Utilities/Nudge.app/Contents/MacOS/Nudge'):
+    #     # Get Nudge config
+    #     try:
+    #         nudge_log['json_config'] = get_nudge_config("-print-json-config")
 
-            plist_config = get_nudge_config("-print-profile-config")
-            try:
-                plist_config = plistlib.readPlistFromString(plist_config)
-            except AttributeError as e:
-                plist_config = plistlib.loads(plist_config)
+    #         plist_config = get_nudge_config("-print-profile-config")
+    #         try:
+    #             plist_config = plistlib.readPlistFromString(plist_config)
+    #         except AttributeError as e:
+    #             plist_config = plistlib.loads(plist_config)
 
-            nudge_log['profile_config'] = json.dumps(plist_config,indent=3,default=str)
-        except Exception:
-            pass
+    #         nudge_log['profile_config'] = json.dumps(plist_config,indent=3,default=str)
+    #     except Exception:
+    #         pass
 
     # Check if the log exists
     if os.path.isfile('/var/log/Nudge.log'):
