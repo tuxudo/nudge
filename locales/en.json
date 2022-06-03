@@ -15,7 +15,7 @@
     "command_quit_event": "Close Attempt",
     "termination_event": "Nudge Termination",
     "activation_event": "Nudge Activation",
-    "new_nudge_event": "New Nudge Event",
+    "new_nudge_event": "Last Nudge Config Read",
     "nudge_log": "Nudge Log",
     "deferral_count": "Deferral Count",
     "deferral_user": "Deferral User",
