@@ -144,8 +144,8 @@ def get_log():
             # Add the line to the nudge text
             nudge_log_text.append(line)
 
-            if line_number > 400:
-                # Exit if we've processed 400 lines
+            if line_number > 500:
+                # Exit if we've processed 500 lines
                 break
             elif "past_required_install_date" not in nudge_log and "Device pastRequiredInstallationDate: false" in line:
                 nudge_log['past_required_install_date'] = 0
@@ -186,6 +186,14 @@ def get_log():
         # Add the nudge text to the dict for saving
         nudge_log_text.reverse()
         nudge_log['nudge_log'] = str.join('', (nudge_log_text))
+
+        # Make sure nudge log isn't too big for database
+        try:
+            nudge_log_length=len(nudge_log['nudge_log'])
+            if nudge_log_length > 65535:
+                nudge_log['nudge_log'] = nudge_log['nudge_log'][65534:]
+        except Exception:
+            pass
 
     else:
         print("Error: No nudge log found!")
