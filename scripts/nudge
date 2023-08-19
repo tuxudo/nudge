@@ -66,7 +66,7 @@ def get_user_deferral():
     nudge_user_config = FoundationPlist.readPlist(userpath+"/Library/Preferences/com.github.macadmins.Nudge.plist")
 
     if "userDeferrals" in nudge_user_config:
-        return {"deferral_count":nudge_user_config["userDeferrals"], "deferral_user":username}
+        return {"deferral_count":nudge_user_config["userDeferrals"], "deferral_user":username, "required_os":nudge_user_config["requiredMinimumOSVersion"]}
     else:
         return ""
 
@@ -109,6 +109,7 @@ def get_log():
         user_deferrals = get_user_deferral()
         nudge_log['deferral_count'] = user_deferrals["deferral_count"]
         nudge_log['deferral_user'] = user_deferrals["deferral_user"]
+        nudge_log['required_os'] = user_deferrals["required_os"]
     except Exception:
         pass
 
@@ -151,12 +152,12 @@ def get_log():
             elif "past_required_install_date" not in nudge_log and "Device pastRequiredInstallationDate: true" in line:
                 nudge_log['past_required_install_date'] = 1
 
-            elif "current_os" not in nudge_log and "Current operating system " in line  and "required_os" not in nudge_log and "is greater than or equal to required operating system" in line:
+            elif "current_os" not in nudge_log and "Current operating system " in line and "is greater than or equal to required operating system" in line:
 
                 extract_result = re.findall(r'\(.*?\)', line)
 
                 nudge_log['current_os'] = extract_result[0].replace("(", "").replace(")", "").strip()
-                nudge_log['required_os'] = extract_result[1].replace("(", "").replace(")", "").strip()
+                # nudge_log['required_os'] = extract_result[1].replace("(", "").replace(")", "").strip()
 
             elif "more_info_event" not in nudge_log and "User clicked moreInfo button" in line:
                 nudge_log['more_info_event'] = nudge_log_to_timestamp(line.split("  localhost ")[0])
