@@ -7,7 +7,7 @@ table:
   - column: reportdata.serial_number
     i18n_header: serial
   - {i18n_header: nudge.past_required_install_date, column: nudge.past_required_install_date, formatter: binaryYesNo}
-  - {i18n_header: nudge.current_os, column: nudge.current_os}
+  - {i18n_header: os.version, column: machine.os_version, formatter: osVersion, filter: osFilter}
   - {i18n_header: nudge.required_os, column: nudge.required_os}
   - {i18n_header: nudge.deferral_count, column: nudge.deferral_count}
   - {i18n_header: nudge.deferral_user, column: nudge.deferral_user}

@@ -7,14 +7,13 @@
  **/
 class Nudge_controller extends Module_controller
 {
-    
     /*** Protect methods with auth! ****/
     public function __construct()
     {
         // Store module path
         $this->module_path = dirname(__FILE__);
     }
-    
+
     /**
     * Default method
     *
@@ -49,7 +48,7 @@ class Nudge_controller extends Module_controller
 
         jsonView($out);
     }
-    
+
     /**
     * Retrieve data in json format
     *
@@ -59,8 +58,8 @@ class Nudge_controller extends Module_controller
     public function get_tab_data($serial_number = '')
     {
         $serial_number = preg_replace("/[^A-Za-z0-9_\-]]/", '', $serial_number);
-    
-        $sql = "SELECT past_required_install_date, current_os, required_os, deferral_count, deferral_user, more_info_event, device_info_event, primary_quit_event, 
+
+        $sql = "SELECT past_required_install_date, required_os, deferral_count, deferral_user, more_info_event, device_info_event, primary_quit_event, 
                         secondary_quit_event, update_device_event, deferral_initiated_event, deferral_date, synthetic_click_event,
                         command_quit_event, termination_event, activation_event, new_nudge_event, nudge_log
                         FROM nudge 
