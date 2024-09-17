@@ -35,7 +35,7 @@ class Nudge extends Migration
             $table->index('required_os');
         });
     }
-    
+
     public function down()
     {
         $capsule = new Capsule();

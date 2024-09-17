@@ -14,7 +14,7 @@ $(document).on('appReady', function(){
                 // Skip skipThese
                 if(skipThese.indexOf(prop) == -1){
                     // Do nothing for empty values to blank them
-                    if (d[prop] == '' || d[prop] == null){
+                    if ((d[prop] == '' || d[prop] == null) && d[prop] != "0"){
                         rows = rows
 
                     // Format connected
@@ -34,21 +34,19 @@ $(document).on('appReady', function(){
                     } else if(prop == 'past_required_install_date' && d[prop] == "0"){
                         rows = rows + '<tr><th>'+i18n.t('nudge.'+prop)+'</th><td>'+i18n.t('no')+'</td></tr>';
 
-                                            
                     // Else, build out rows
                     } else {
                         rows = rows + '<tr><th>'+i18n.t('nudge.'+prop)+'</th><td>'+d[prop]+'</td></tr>';
                     }
                 }
             }
-            
+
             $('#nudge-tab')
                 .append($('<div style="max-width:1600px;">')
                     .append($('<table>')
                         .addClass('table table-striped table-condensed')
                         .append($('<tbody>')
                             .append(rows))))
-               
         })
     });
 });

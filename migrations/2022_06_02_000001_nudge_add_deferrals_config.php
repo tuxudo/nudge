@@ -20,7 +20,7 @@ class NudgeAddDeferralsConfig extends Migration
             $table->index('deferral_user');
         });
     }
-    
+
     public function down()
     {
         $capsule = new Capsule();
