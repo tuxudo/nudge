@@ -63,7 +63,9 @@ class Nudge_controller extends Module_controller
                         secondary_quit_event, update_device_event, deferral_initiated_event, deferral_date, synthetic_click_event,
                         command_quit_event, termination_event, activation_event, new_nudge_event, nudge_log
                         FROM nudge 
-                        WHERE serial_number = '$serial_number'";
+                        LEFT JOIN reportdata USING (serial_number)
+                        ".get_machine_group_filter()."
+                        AND serial_number = '$serial_number'";
 
         $queryobj = new Nudge_model();
         jsonView($queryobj->query($sql));
