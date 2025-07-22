@@ -4,7 +4,7 @@
 <script>
 $(document).on('appReady', function(){
     $.getJSON(appUrl + '/module/nudge/get_tab_data/' + serialNumber, function(data){
-       
+
         var skipThese = ['id','serial_number','serial'];
         $.each(data, function(i,d){
 

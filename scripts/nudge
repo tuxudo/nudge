@@ -9,7 +9,6 @@ import plistlib
 import time
 from datetime import datetime, timedelta, tzinfo
 
-sys.path.insert(0, '/usr/local/munki')
 sys.path.insert(0, '/usr/local/munkireport')
 
 from munkilib import FoundationPlist
@@ -25,24 +24,50 @@ from ctypes import (CDLL,
                     c_uint32)
 from ctypes.util import find_library
 
-def get_last_user():
+class timeval(Structure):
+    _fields_ = [
+                ("tv_sec",  c_int64),
+                ("tv_usec", c_int32),
+               ]
+
+class utmpx(Structure):
+    _fields_ = [
+                ("ut_user", c_char*256),
+                ("ut_id",   c_char*4),
+                ("ut_line", c_char*32),
+                ("ut_pid",  c_int32),
+                ("ut_type", c_int16),
+                ("ut_tv",   timeval),
+                ("ut_host", c_char*256),
+                ("ut_pad",  c_uint32*16),
+               ]
+
+def current_user():
 
     # local constants
-    setutxent_wtmp = c.setutxent_wtmp
-    setutxent_wtmp.restype = None
-    getutxent_wtmp = c.getutxent_wtmp
-    getutxent_wtmp.restype = POINTER(utmpx)
-    endutxent_wtmp = c.setutxent_wtmp
-    endutxent_wtmp.restype = None
-    # initialize
-    setutxent_wtmp(0)
-    entry = getutxent_wtmp()
-    while entry:
-        e = entry.contents
+    c = CDLL(find_library("System"))
+    username = (SCDynamicStoreCopyConsoleUser(None, None, None) or [None])[0]
+    username = [username,""][username in ["loginwindow", None, ""]]
+
+    # If we can't get the current user, get last console login
+    if username == "":
+        setutxent_wtmp = c.setutxent_wtmp
+        setutxent_wtmp.restype = None
+        getutxent_wtmp = c.getutxent_wtmp
+        getutxent_wtmp.restype = POINTER(utmpx)
+        endutxent_wtmp = c.setutxent_wtmp
+        endutxent_wtmp.restype = None
+        # initialize
+        setutxent_wtmp(0)
         entry = getutxent_wtmp()
-        if (e.ut_type == 7 and e.ut_line == "console" and e.ut_user != "root" and e.ut_user != ""):
-            endutxent_wtmp()
-            return e.ut_user
+        while entry:
+            e = entry.contents
+            entry = getutxent_wtmp()
+            if (e.ut_type == 7 and e.ut_line == b"console" and e.ut_user != "root" and e.ut_user != "" and e.ut_user != b"root" and e.ut_user != b""):
+                endutxent_wtmp()
+                return e.ut_user
+    else:
+        return username
 
 def get_user_deferral():
 
@@ -52,7 +77,7 @@ def get_user_deferral():
 
     # If we can't get the current user, get last console login
     if username == "":
-        username = get_last_user()
+        username = current_user()
 
     # Get the user's home folder
     cmd = ['/usr/bin/dscl', '.', '-read', '/Users/'+username, 'NFSHomeDirectory']
