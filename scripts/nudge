@@ -214,8 +214,8 @@ def get_log():
         # Make sure nudge log isn't too big for database
         try:
             nudge_log_length=len(nudge_log['nudge_log'])
-            if nudge_log_length > 65535:
-                nudge_log['nudge_log'] = nudge_log['nudge_log'][65534:]
+            if nudge_log_length > 65534:
+                nudge_log['nudge_log'] = nudge_log['nudge_log'][(nudge_log_length-65534):]
         except Exception:
             pass
 
